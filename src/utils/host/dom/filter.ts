@@ -151,26 +151,37 @@ function isInsideContentContainer(element: HTMLElement): boolean {
   return false
 }
 
-export function isDontWalkIntoAndDontTranslateAsChildElement(element: HTMLElement, config: Config): boolean {
+interface DontWalkIntoElementOptions {
+  includeComputedStyle?: boolean
+}
+
+export function isDontWalkIntoAndDontTranslateAsChildElement(
+  element: HTMLElement,
+  config: Config,
+  options: DontWalkIntoElementOptions = {},
+): boolean {
   const dontWalkCustomElement = isCustomDontWalkIntoElement(element)
   const dontWalkContent = config.translate.page.range !== "all"
     && MAIN_CONTENT_IGNORE_TAGS.has(element.tagName)
     && !isInsideContentContainer(element)
   const dontWalkInvalidTag = DONT_WALK_AND_TRANSLATE_TAGS.has(element.tagName)
-  const dontWalkCSS
-    = window.getComputedStyle(element).display === "none"
-      || window.getComputedStyle(element).visibility === "hidden"
+  const dontWalkInlineStyle = element.style.display === "none" || element.style.visibility === "hidden"
   const dontWalkHidden = element.hidden
   const dontWalkAriaHidden = element.getAttribute("aria-hidden") === "true"
   const dontWalkVisuallyHidden = ["sr-only", "visually-hidden"].some(cls =>
     element.classList.contains(cls),
   )
 
-  if (dontWalkCustomElement || dontWalkContent || dontWalkInvalidTag || dontWalkCSS || dontWalkHidden || dontWalkAriaHidden || dontWalkVisuallyHidden) {
+  if (dontWalkCustomElement || dontWalkContent || dontWalkInvalidTag || dontWalkHidden || dontWalkAriaHidden || dontWalkVisuallyHidden || dontWalkInlineStyle) {
     return true
   }
 
-  return false
+  if (options.includeComputedStyle === false) {
+    return false
+  }
+
+  const computedStyle = window.getComputedStyle(element)
+  return computedStyle.display === "none" || computedStyle.visibility === "hidden"
 }
 
 export function isInlineTransNode(node: TransNode): boolean {

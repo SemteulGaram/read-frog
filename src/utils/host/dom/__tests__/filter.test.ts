@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type { Config } from "@/types/config/config"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import { DEFAULT_CONFIG } from "@/utils/constants/config"
 import {
@@ -195,5 +195,36 @@ describe("isDontWalkIntoAndDontTranslateAsChildElement", () => {
     document.body.appendChild(nav)
     expect(isDontWalkIntoAndDontTranslateAsChildElement(nav, createConfig("main"))).toBe(true)
     document.body.removeChild(nav)
+  })
+
+  it("should skip computed style checks when disabled", () => {
+    const element = document.createElement("div")
+    const getComputedStyleSpy = vi.spyOn(window, "getComputedStyle")
+
+    try {
+      expect(isDontWalkIntoAndDontTranslateAsChildElement(element, DEFAULT_CONFIG, {
+        includeComputedStyle: false,
+      })).toBe(false)
+      expect(getComputedStyleSpy).not.toHaveBeenCalled()
+    }
+    finally {
+      getComputedStyleSpy.mockRestore()
+    }
+  })
+
+  it("should still detect hidden inline style when computed style checks are disabled", () => {
+    const element = document.createElement("div")
+    element.style.display = "none"
+    const getComputedStyleSpy = vi.spyOn(window, "getComputedStyle")
+
+    try {
+      expect(isDontWalkIntoAndDontTranslateAsChildElement(element, DEFAULT_CONFIG, {
+        includeComputedStyle: false,
+      })).toBe(true)
+      expect(getComputedStyleSpy).not.toHaveBeenCalled()
+    }
+    finally {
+      getComputedStyleSpy.mockRestore()
+    }
   })
 })

@@ -11,7 +11,9 @@ export async function removeDummyNodes(root: Document) {
   const elements = root.querySelectorAll("*")
   const config = await getLocalConfig() ?? DEFAULT_CONFIG
   elements.forEach((element) => {
-    const isDontTranslate = isHTMLElement(element) && isDontWalkIntoAndDontTranslateAsChildElement(element, config)
+    const isDontTranslate = isHTMLElement(element) && isDontWalkIntoAndDontTranslateAsChildElement(element, config, {
+      includeComputedStyle: false,
+    })
     if (isDontTranslate) {
       element.remove()
     }
