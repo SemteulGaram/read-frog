@@ -197,14 +197,30 @@ describe("isDontWalkIntoAndDontTranslateAsChildElement", () => {
     document.body.removeChild(nav)
   })
 
-  it("should skip computed style checks when disabled", () => {
+  it("should detect stylesheet-hidden elements", () => {
+    const style = document.createElement("style")
+    style.textContent = ".read-frog-test-hidden { display: none; }"
+    document.head.appendChild(style)
     const element = document.createElement("div")
+    element.className = "read-frog-test-hidden"
+    document.body.appendChild(element)
+
+    try {
+      expect(isDontWalkIntoAndDontTranslateAsChildElement(element, DEFAULT_CONFIG)).toBe(true)
+    }
+    finally {
+      document.body.removeChild(element)
+      document.head.removeChild(style)
+    }
+  })
+
+  it("should skip computed style checks for hidden inline style", () => {
+    const element = document.createElement("div")
+    element.style.display = "none"
     const getComputedStyleSpy = vi.spyOn(window, "getComputedStyle")
 
     try {
-      expect(isDontWalkIntoAndDontTranslateAsChildElement(element, DEFAULT_CONFIG, {
-        includeComputedStyle: false,
-      })).toBe(false)
+      expect(isDontWalkIntoAndDontTranslateAsChildElement(element, DEFAULT_CONFIG)).toBe(true)
       expect(getComputedStyleSpy).not.toHaveBeenCalled()
     }
     finally {
@@ -212,15 +228,13 @@ describe("isDontWalkIntoAndDontTranslateAsChildElement", () => {
     }
   })
 
-  it("should still detect hidden inline style when computed style checks are disabled", () => {
+  it("should skip computed style checks for hidden attributes", () => {
     const element = document.createElement("div")
-    element.style.display = "none"
+    element.hidden = true
     const getComputedStyleSpy = vi.spyOn(window, "getComputedStyle")
 
     try {
-      expect(isDontWalkIntoAndDontTranslateAsChildElement(element, DEFAULT_CONFIG, {
-        includeComputedStyle: false,
-      })).toBe(true)
+      expect(isDontWalkIntoAndDontTranslateAsChildElement(element, DEFAULT_CONFIG)).toBe(true)
       expect(getComputedStyleSpy).not.toHaveBeenCalled()
     }
     finally {

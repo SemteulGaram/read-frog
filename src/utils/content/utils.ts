@@ -8,16 +8,26 @@ const ZERO_WIDTH_CHARS_RE = /[\u200B-\u200D\uFEFF]/g
 const WHITESPACE_RUN_RE = /\s+/g
 
 export async function removeDummyNodes(root: Document) {
-  const elements = root.querySelectorAll("*")
   const config = await getLocalConfig() ?? DEFAULT_CONFIG
-  elements.forEach((element) => {
-    const isDontTranslate = isHTMLElement(element) && isDontWalkIntoAndDontTranslateAsChildElement(element, config, {
-      includeComputedStyle: false,
-    })
-    if (isDontTranslate) {
-      element.remove()
+
+  const removeDummyDescendants = (element: Element) => {
+    if (!isHTMLElement(element)) {
+      return
     }
-  })
+
+    if (isDontWalkIntoAndDontTranslateAsChildElement(element, config)) {
+      element.remove()
+      return
+    }
+
+    for (const child of Array.from(element.children)) {
+      removeDummyDescendants(child)
+    }
+  }
+
+  for (const child of Array.from(root.children)) {
+    removeDummyDescendants(child)
+  }
 }
 
 /**

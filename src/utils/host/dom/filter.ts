@@ -151,15 +151,7 @@ function isInsideContentContainer(element: HTMLElement): boolean {
   return false
 }
 
-interface DontWalkIntoElementOptions {
-  includeComputedStyle?: boolean
-}
-
-export function isDontWalkIntoAndDontTranslateAsChildElement(
-  element: HTMLElement,
-  config: Config,
-  options: DontWalkIntoElementOptions = {},
-): boolean {
+export function isDontWalkIntoAndDontTranslateAsChildElement(element: HTMLElement, config: Config): boolean {
   const dontWalkCustomElement = isCustomDontWalkIntoElement(element)
   const dontWalkContent = config.translate.page.range !== "all"
     && MAIN_CONTENT_IGNORE_TAGS.has(element.tagName)
@@ -174,10 +166,6 @@ export function isDontWalkIntoAndDontTranslateAsChildElement(
 
   if (dontWalkCustomElement || dontWalkContent || dontWalkInvalidTag || dontWalkHidden || dontWalkAriaHidden || dontWalkVisuallyHidden || dontWalkInlineStyle) {
     return true
-  }
-
-  if (options.includeComputedStyle === false) {
-    return false
   }
 
   const computedStyle = window.getComputedStyle(element)
