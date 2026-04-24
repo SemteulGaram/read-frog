@@ -10,23 +10,18 @@ const WHITESPACE_RUN_RE = /\s+/g
 export async function removeDummyNodes(root: Document) {
   const config = await getLocalConfig() ?? DEFAULT_CONFIG
 
-  const removeDummyDescendants = (element: Element) => {
-    if (!isHTMLElement(element)) {
-      return
-    }
+  const stack = Array.from(root.children).reverse()
+  while (stack.length > 0) {
+    const element = stack.pop()
+    if (!element || !isHTMLElement(element))
+      continue
 
     if (isDontWalkIntoAndDontTranslateAsChildElement(element, config)) {
       element.remove()
-      return
+      continue
     }
 
-    for (const child of Array.from(element.children)) {
-      removeDummyDescendants(child)
-    }
-  }
-
-  for (const child of Array.from(root.children)) {
-    removeDummyDescendants(child)
+    stack.push(...Array.from(element.children).reverse())
   }
 }
 
